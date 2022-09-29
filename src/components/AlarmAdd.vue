@@ -37,9 +37,9 @@
                 </button>
             </div>
         </div>
-        <button class="add">
+        <!-- <button class="add" @click="checkTime">
             Add
-        </button>
+        </button> -->
     </div>
 </template>
 
@@ -50,7 +50,8 @@ export default {
             hour_1: 0,
             hour_2: 0,
             minute_1: 0,
-            minute_2: 0
+            minute_2: 0,
+            ring: false
         }
     },  
     methods: {
@@ -110,8 +111,33 @@ export default {
                 }
                 else this.minute_2--;
             }
+        },
+        checkTime()
+        {
+            const today = new Date();
+            let _hour = today.getHours();
+            let _minute = today.getMinutes();
+            
+            if(
+                _hour == (this.hour_1 * 10) + this.hour_2 && 
+                _minute == (this.minute_1 * 10) + this.minute_2
+            )
+            {
+                if(!this.ring)
+                {
+                    alert("Alarm is ringing!");
+                    this.ring = true;
+                }
+            }
+            else this.ring = false;
+
+            console.log((this.hour_1 * 10) + this.hour_2);
+            console.log((this.minute_1 * 10) + this.minute_2);
         }
-    }                                              
+    },
+    mounted() {
+        setInterval(() => this.checkTime(), 1000);
+    }                                           
 }
 </script>
     
