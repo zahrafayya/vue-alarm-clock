@@ -1,13 +1,13 @@
 <script setup>
-    import AlarmAdd from './AlarmAdd.vue'
     import AlarmList from './AlarmList.vue'
 </script>
+
 <template>
     <div class="container">
         <div class="title">
             Alarm
         </div>
-        <AlarmAdd/>
+        <AlarmList/>
     </div>
 </template>
 
