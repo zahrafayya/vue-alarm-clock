@@ -20,6 +20,6 @@
     font-size: 52px;
     font-weight: 800;
     font-family: 'Reem Kufi Fun', sans-serif;
-    margin-bottom: 44px;
+    margin-bottom: 36px;
 }
 </style>

@@ -14,7 +14,7 @@
 <style>
 .alarm
 {
-  margin-top: 92px;
+  margin-top: 64px;
 }
 </style>
 
