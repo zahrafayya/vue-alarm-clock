@@ -1,3 +1,7 @@
+<script setup>
+    import AlarmItem from './AlarmItem.vue'
+</script>
+
 <template>
     <div class="container">
         <div class="set">
@@ -40,16 +44,19 @@
         <button class="add" @click="addAlarm">
             Add
         </button>
+        <AlarmItem/>
         <div v-for="alarm in alarms">
+            <p>aaaaaaaa</p>
+            <p>aaaaaaaa</p>
+            <p>aaaaaaaa</p>
             <div v-if="alarm.id">
-                {{ alarm.id }} {{ alarm.hour }} {{ alarm.minute }}
+                {{ alarm.hour }}
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import AlarmItem from "./AlarmItem.vue";
 export default {
     data() {
         return {
@@ -139,7 +146,6 @@ export default {
     mounted() {
         setInterval(() => this.checkTime(), 1000);
     },
-    components: { AlarmItem }
 }
 </script>
     
