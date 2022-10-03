@@ -40,10 +40,16 @@
         <button class="add" @click="addAlarm">
             Add
         </button>
+        <div v-for="alarm in alarms">
+            <div v-if="alarm.id">
+                {{ alarm.id }} {{ alarm.hour }} {{ alarm.minute }}
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
+import AlarmItem from "./AlarmItem.vue";
 export default {
     data() {
         return {
@@ -52,99 +58,88 @@ export default {
             minute_1: 0,
             minute_2: 0,
             ring: false,
-
-            alarms: [ { id: 0, hour: 0, minute: 0 }]
-        }
-    },  
+            alarms: [{ id: 0, hour: 0, minute: 0, days: [false, false, false, false, false, false, false], ringtone: null, isSnooze: false, daysLeft: 0, hourLeft: 0, minuteLeft: 0,
+                }]
+        };
+    },
     methods: {
         upHour() {
-            if(this.hour_2 == 9) this.hour_1++;
+            if (this.hour_2 == 9)
+                this.hour_1++;
             this.hour_2 = (this.hour_2 == 9) ? 0 : this.hour_2 + 1;
-            if(this.hour_1 == 3) this.hour_1 = 0;
-
-            if(this.hour_1 == 2 && this.hour_2 == 4)
-            {
+            if (this.hour_1 == 3)
+                this.hour_1 = 0;
+            if (this.hour_1 == 2 && this.hour_2 == 4) {
                 this.hour_1 = 0;
                 this.hour_2 = 0;
             }
         },
         downHour() {
-            if(this.hour_1 == 0 && this.hour_2 == 0)
-            {
+            if (this.hour_1 == 0 && this.hour_2 == 0) {
                 this.hour_1 = 2;
                 this.hour_2 = 3;
             }
-            else 
-            {
-                if(this.hour_2 == 0)
-                {
+            else {
+                if (this.hour_2 == 0) {
                     this.hour_2 = 9;
                     this.hour_1--;
                 }
-                else this.hour_2--;
+                else
+                    this.hour_2--;
             }
         },
         upMinute() {
-            if(this.minute_2 == 9)
-            {
+            if (this.minute_2 == 9) {
                 this.minute_2 = 0;
                 this.minute_1++;
             }
-            else this.minute_2++;
-            
-            if(this.minute_1 == 6) {
+            else
+                this.minute_2++;
+            if (this.minute_1 == 6) {
                 this.minute_1 = 0;
                 this.upHour();
             }
         },
         downMinute() {
-            if(this.minute_1 == 0 && this.minute_2 == 0)
-            {
+            if (this.minute_1 == 0 && this.minute_2 == 0) {
                 this.downHour();
                 this.minute_1 = 5;
                 this.minute_2 = 9;
             }
-            else 
-            {
-                if(this.minute_2 == 0)
-                {
+            else {
+                if (this.minute_2 == 0) {
                     this.minute_2 = 9;
                     this.minute_1--;
                 }
-                else this.minute_2--;
+                else
+                    this.minute_2--;
             }
         },
-        checkTime()
-        {
+        checkTime() {
             const today = new Date();
             let _hour = today.getHours();
             let _minute = today.getMinutes();
-            
-            if(
-                _hour == (this.hour_1 * 10) + this.hour_2 && 
-                _minute == (this.minute_1 * 10) + this.minute_2
-            )
-            {
-                if(!this.ring)
-                {
+            if (_hour == (this.hour_1 * 10) + this.hour_2 &&
+                _minute == (this.minute_1 * 10) + this.minute_2) {
+                if (!this.ring) {
                     alert("Alarm is ringing!");
                     this.ring = true;
                 }
             }
-            else this.ring = false;
+            else
+                this.ring = false;
         },
         addAlarm() {
             let _hour = this.hour_1 * 10 + this.hour_2;
             let _minute = this.minute_1 * 10 + this.minute_2;
-
-            this.alarms.push({ id: 1, hour: _hour, minute: _minute});
-
+            this.alarms.push({ id: this.alarms[this.alarms.length - 1].id + 1, hour: _hour, minute: _minute });
             console.log(this.alarms);
-        } 
+        }
     },
     mounted() {
         setInterval(() => this.checkTime(), 1000);
-    }                                
+    },
+    components: { AlarmItem }
 }
 </script>
     
