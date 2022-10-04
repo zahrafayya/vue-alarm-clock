@@ -69,7 +69,7 @@
         <button class="add" @click="addAlarm">
             Add
         </button>
-        <AlarmItem/>
+        <AlarmItem :alarms="alarms"/>
         <AlarmItem/>
         <div v-for="alarm in alarms">
             <p>aaaaaaaa</p>
@@ -203,8 +203,17 @@ export default {
         }
     },
     mounted() {
+        this.alarms = JSON.parse(localStorage.getItem('alarm')) || this.alarms;
         setInterval(() => this.checkTime(), 1000);
     },
+    watch: {
+        alarms: {
+            handler() {
+                localStorage.setItem('alarm', JSON.stringify(this.alarms));
+            },
+            deep: true
+        }
+    }
 }
 </script>
     
@@ -287,7 +296,7 @@ export default {
     margin-bottom: 8px;
 }
 .add-label {
-    font-size: 18px;
+    font-size: 21px;
     font-weight: 600;
     margin-bottom: 16px;
 }
@@ -295,7 +304,7 @@ export default {
     display: flex;
 }
 .ringtone-label {
-    margin-left: 12px;
+    margin-left: 18px;
 }
 .day {
     all: unset;

@@ -40,6 +40,7 @@
 
 <script>
 export default {
+    props: { alarms: [] },
     data() {
         return {
             itemDays: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
