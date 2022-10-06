@@ -95,9 +95,9 @@
           Alarm "{{ this.alarms[this.alarms.length - 1].name }}" has been successfully added.
         </PopUpAdd>
 
-      <PopUpNoDay v-if="alarmNoDay"
-                  :addAlarmNoDay = "() => addAlarmNoDay()"
-      />
+        <PopUpNoDay v-if="alarmNoDay"
+                    :addAlarmNoDay = "() => addAlarmNoDay()"
+        />
     </div>
 </template>
 
@@ -105,8 +105,8 @@
 export default {
     data() {
         return {
-            snoozeMinute: 1,
-            ringingTime: 2,
+            defaultSnoozeMinute: 1,
+            defaultRingingTime: 2,
             hour_1: 0,
             hour_2: 0,
             minute_1: 0,
@@ -137,6 +137,8 @@ export default {
                 hourLeft: 0,
                 minuteLeft: 0,
                 isActive: true,
+                snoozeMinute: this.defaultSnoozeMinute,
+                ringingTime: this.defaultRingingTime,
             }],
 
             alarmAtHour: {
@@ -224,8 +226,8 @@ export default {
 
           if (_alarm.days[_day - 1]) {
             if (_alarm.minute == _minute && !_alarm.hasStopped) {
-              let _endMinute = ((_alarm.minute + this.ringingTime) % 60);
-              let _endHour = ((_alarm.minute + this.ringingTime) >= 60) ?
+              let _endMinute = ((_alarm.minute + _alarm.ringingTime) % 60);
+              let _endHour = ((_alarm.minute + _alarm.ringingTime) >= 60) ?
                   ((_alarm.hour + 1) % 24) : _alarm.hour;
 
               _alarm.isRinging = true;
@@ -243,8 +245,8 @@ export default {
         for (let j = 0; j < this.snoozedAlarms.length; j++) {
           let _alarm = this.alarms.find(a => a.id === this.snoozedAlarms[j].id);
 
-          let _minuteSnooze = ((_alarm.minute + (this.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) % 60);
-          let _hourSnooze = ((_alarm.minute + (this.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) >= 60) ?
+          let _minuteSnooze = ((_alarm.minute + (_alarm.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) % 60);
+          let _hourSnooze = ((_alarm.minute + (_alarm.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) >= 60) ?
               ((_alarm.hour + 1) % 24) : _alarm.hour;
 
           console.log(_hour == _hourSnooze && _minute == _minuteSnooze);
@@ -254,8 +256,8 @@ export default {
 
           if (_hour == _hourSnooze && _minute == _minuteSnooze) {
             console.log("MASUK");
-            let _endMinute = ((_minuteSnooze + this.ringingTime) % 60);
-            let _endHour = ((_hourSnooze + this.ringingTime) >= 60) ?
+            let _endMinute = ((_minuteSnooze + _alarm.ringingTime) % 60);
+            let _endHour = ((_hourSnooze + _alarm.ringingTime) >= 60) ?
                 ((_alarm.hour + 1) % 24) : _alarm.hour;
 
             _alarm.isRinging = true;
@@ -358,7 +360,9 @@ export default {
             daysLeft: 0,
             hourLeft: 0,
             minuteLeft: 0,
-            isActive: true
+            isActive: true,
+            snoozeMinute: this.defaultSnoozeMinute,
+            ringingTime: this.defaultRingingTime,
           });
           this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
 

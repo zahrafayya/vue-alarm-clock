@@ -54,7 +54,8 @@
 
           <PopUpEditAlarm v-if="clickEdit"
                           :confirmEdit="() => confirmEdit(id)"
-                          :cancelEdit="() => cancelEdit()"/>
+                          :cancelEdit="() => cancelEdit()"
+                          :alarm="alarm"/>
 
         </div>
     </div>
