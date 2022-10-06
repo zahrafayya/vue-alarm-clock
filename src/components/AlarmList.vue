@@ -1,7 +1,10 @@
 <script setup>
     import AlarmItem from './AlarmItem.vue'
     import RingtoneIcon from './icons/RingtoneIcon.vue';
-    import AlarmPopup from "./AlarmPopup.vue";
+    import PopUpRinging from "./PopUpRinging.vue";
+    import PopUpMaxSnooze from "./PopUpMaxSnooze.vue";
+    import PopUpAdd from "./PopUpAdd.vue";
+    import PopUpNoDay from "./PopUpNoDay.vue";
 </script>
 
 <template>
@@ -73,13 +76,28 @@
         <div class="alarm-item">
             <AlarmItem :alarms="alarms"/>
         </div>
-        <AlarmPopup
+
+        <PopUpRinging
             v-if="isRinging"
             :stopAlarm = "() => stopAlarm(currentRingingAlarm)"
             :snoozeAlarm = "() => snoozeAlarm(currentRingingAlarm)"
         >
             <p>{{ ringingAlarmName }} is ringing!</p>
-        </AlarmPopup>
+        </PopUpRinging>
+
+        <PopUpMaxSnooze v-if="hasReachedMaxSnooze"
+        :maxSnoozeOk = "() => maxSnoozeOk()"
+        />
+
+        <PopUpAdd v-if="addAlarmSuccess"
+        :addAlarmOk = "() => addAlarmOk()"
+        >
+          Alarm "{{ this.alarms[this.alarms.length - 1].name }}" has been successfully added.
+        </PopUpAdd>
+
+      <PopUpNoDay v-if="alarmNoDay"
+                  :addAlarmNoDay = "() => addAlarmNoDay()"
+      />
     </div>
 </template>
 
@@ -99,6 +117,10 @@ export default {
             currentRingingAlarm: null,
             ringingAlarmName: null,
 
+            hasReachedMaxSnooze: false,
+            addAlarmSuccess: false,
+            alarmNoDay: false,
+
             days: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
 
             alarms: [{
@@ -114,6 +136,7 @@ export default {
                 daysLeft: 0,
                 hourLeft: 0,
                 minuteLeft: 0,
+                isActive: true,
             }],
 
             alarmAtHour: {
@@ -132,6 +155,15 @@ export default {
     methods: {
       changeDayToggle(day) {
         this.selectDay[day] = !this.selectDay[day];
+      },
+      addAlarmOk() {
+        this.addAlarmSuccess = false;
+      },
+      maxSnoozeOk() {
+        this.hasReachedMaxSnooze = false;
+      },
+      addAlarmNoDay() {
+        this.alarmNoDay = false;
       },
       upHour() {
         if (this.hour_2 == 9)
@@ -290,6 +322,8 @@ export default {
             this.snoozedAlarms.splice(_index, 1);
 
             // kasih popup tulisan kalau alarm udah ga bisa disnooze lagi
+            this.hasReachedMaxSnooze = true;
+
             this.stopAlarm(id);
           } else _snoozedAlarm.pressSnoozeCount++;
         } else {
@@ -306,21 +340,36 @@ export default {
       addAlarm() {
         let _hour = this.hour_1 * 10 + this.hour_2;
         let _minute = this.minute_1 * 10 + this.minute_2;
-        this.alarms.push({
-          id: this.alarms[this.alarms.length - 1].id + 1,
-          name: (this.alarmName) ? this.alarmName : "My Alarm " + (this.alarms[this.alarms.length - 1].id + 1),
-          hour: _hour,
-          minute: _minute,
-          days: this.selectDay,
-          isSnoozed: false,
-          isRinging: false,
-          hasStopped: false,
-          ringtone: null,
-          daysLeft: 0,
-          hourLeft: 0,
-          minuteLeft: 0,
-        });
-        this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
+
+        console.log(this.selectDay.includes(true));
+
+        if (this.selectDay.includes(true))
+        {
+          this.alarms.push({
+            id: this.alarms[this.alarms.length - 1].id + 1,
+            name: (this.alarmName) ? this.alarmName : "My Alarm " + (this.alarms[this.alarms.length - 1].id + 1),
+            hour: _hour,
+            minute: _minute,
+            days: this.selectDay,
+            isSnoozed: false,
+            isRinging: false,
+            hasStopped: false,
+            ringtone: null,
+            daysLeft: 0,
+            hourLeft: 0,
+            minuteLeft: 0,
+            isActive: true
+          });
+          this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
+
+          this.addAlarmSuccess = true;
+        }
+        else
+        {
+          this.alarmNoDay = true;
+        }
+
+
       },
     },
     mounted() {
@@ -422,7 +471,7 @@ export default {
     margin-bottom: 8px;
 }
 .add-label {
-    font-size: 21px;
+    font-size: 24px;
     font-weight: 600;
     margin-bottom: 16px;
 }
@@ -435,11 +484,11 @@ export default {
 .day {
     all: unset;
     font-weight: 600;
-    font-size: larger;
+    font-size: 21px;
     border-radius: 100%;
-    border: 1px solid #FFF;
-    width: 42px;
-    height: 42px;
+    border: 2px solid #FFF;
+    width: 45px;
+    height: 45px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -448,7 +497,7 @@ export default {
 }
 
 .day:hover {
-    border: 1px solid rgb(65, 65, 65);
+    border: 2px solid rgb(65, 65, 65);
     color: rgb(65, 65, 65);
     cursor: context-menu;
 }
