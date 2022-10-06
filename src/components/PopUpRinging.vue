@@ -5,10 +5,10 @@
         <slot />
       </div>
       <div>
-        <button class="popup-close-1" @click="snoozeAlarm()">
+        <button class="popup-close-1" @click="snoozeAlarm(); stopMusic()">
           Snooze Alarm
         </button>
-        <button class="popup-close" @click="stopAlarm()">
+        <button class="popup-close" @click="stopAlarm(); stopMusic()">
           Stop Alarm
         </button>
       </div>
@@ -18,7 +18,51 @@
 
 <script>
 export default {
-  props: ['stopAlarm', 'snoozeAlarm']
+  props: { stopAlarm: null, snoozeAlarm: null, alarm: null},
+  data () {
+    return {
+      ringtone: null,
+      currMinutes: null
+    }
+  },
+  methods: {
+    stopMusic() {
+      this.ringtone.pause();
+      this.currentTime = 0;
+    },
+    checkMinute() {
+      const today = new Date();
+
+      let _minutes = today.getMinutes();
+
+      if((this.alarm.minute + this.alarm.ringingTime) % 60 === _minutes && !this.alarm.isSnoozed)
+      {
+        this.stopMusic();
+        this.stopAlarm();
+      }
+    }
+  },
+  mounted() {
+    const today = new Date();
+
+    this.currMinutes = today.getMinutes();
+
+    this.ringtone = new Audio('../src/assets/audio/default_1.mp3');
+    if (typeof this.ringtone.loop == 'boolean')
+    {
+      this.ringtone.loop = true;
+    }
+    else
+    {
+      this.ringtone.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+      }, false);
+    }
+    this.ringtone.play();
+
+    setInterval(() => this.checkMinute(), 1000);
+  }
 }
 </script>
 

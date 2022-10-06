@@ -5,6 +5,7 @@
     import PopUpMaxSnooze from "./PopUpMaxSnooze.vue";
     import PopUpAdd from "./PopUpAdd.vue";
     import PopUpNoDay from "./PopUpNoDay.vue";
+    import axios from 'axios';
 </script>
 
 <template>
@@ -56,13 +57,13 @@
                     <div class="add-label">Ringtone: </div>
                     <div class="select-ringtone">
                         <RingtoneIcon/>
-                        <div class="ringtone-label">Alarm ringtone</div>
+                        <input class="upload-song" type="file" ref="file" v-on:change="handleFileUpload()"/>
                     </div>
                 </div>
                 <div class="days">
                     <div v-for="(day, index) in days">
                         <button class="day" @click="changeDayToggle(index)" 
-                        :style=" selectDay[index] ? { 'color': '#000', 'border': '1px solid #000' } : null">
+                        :style=" selectDay[index] ? { 'color': '#000', 'border': '2px solid #000' } : null">
                         {{ day }}
                         </button>
                     </div>
@@ -74,13 +75,14 @@
             Add
         </button>
         <div class="alarm-item">
-            <AlarmItem :alarms="alarms"/>
+            <AlarmItem :alarms="alarms" :ringingAlarms="ringingAlarms" :snoozedAlarms="snoozedAlarms"/>
         </div>
 
         <PopUpRinging
             v-if="isRinging"
             :stopAlarm = "() => stopAlarm(currentRingingAlarm)"
             :snoozeAlarm = "() => snoozeAlarm(currentRingingAlarm)"
+            :alarm = "alarms.find(a => a.id === currentRingingAlarm)"
         >
             <p>{{ ringingAlarmName }} is ringing!</p>
         </PopUpRinging>
@@ -105,8 +107,9 @@
 export default {
     data() {
         return {
+            file: null,
             defaultSnoozeMinute: 1,
-            defaultRingingTime: 2,
+            defaultRingingTime: 1,
             hour_1: 0,
             hour_2: 0,
             minute_1: 0,
@@ -139,6 +142,8 @@ export default {
                 isActive: true,
                 snoozeMinute: this.defaultSnoozeMinute,
                 ringingTime: this.defaultRingingTime,
+                deleteAsk: false,
+                clickEdit: false
             }],
 
             alarmAtHour: {
@@ -155,6 +160,9 @@ export default {
         };
     },
     methods: {
+      handleFileUpload(){
+        this.file = this.$refs.file.files[0];
+      },
       changeDayToggle(day) {
         this.selectDay[day] = !this.selectDay[day];
       },
@@ -224,7 +232,7 @@ export default {
           let _id = this.alarmAtHour['_' + _hour][i];
           let _alarm = this.alarms.find(a => a.id === _id);
 
-          if (_alarm.days[_day - 1]) {
+          if (_alarm.days[_day - 1] && _alarm.isActive) {
             if (_alarm.minute == _minute && !_alarm.hasStopped) {
               let _endMinute = ((_alarm.minute + _alarm.ringingTime) % 60);
               let _endHour = ((_alarm.minute + _alarm.ringingTime) >= 60) ?
@@ -343,7 +351,18 @@ export default {
         let _hour = this.hour_1 * 10 + this.hour_2;
         let _minute = this.minute_1 * 10 + this.minute_2;
 
-        console.log(this.selectDay.includes(true));
+        let formData = new FormData();
+        formData.append('file', this.file);
+
+        axios.post( '/upload',
+            formData,
+            {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+        )
 
         if (this.selectDay.includes(true))
         {
@@ -363,6 +382,8 @@ export default {
             isActive: true,
             snoozeMinute: this.defaultSnoozeMinute,
             ringingTime: this.defaultRingingTime,
+            deleteAsk: false,
+            clickEdit: false
           });
           this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
 
@@ -394,6 +415,9 @@ export default {
 </script>
     
 <style>
+.upload-song {
+  margin-left: 12px;
+}
 .container
 {
     display: flex;

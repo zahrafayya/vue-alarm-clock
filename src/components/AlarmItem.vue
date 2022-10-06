@@ -19,12 +19,14 @@
                       <div>
                         {{ alarm.name }}
                       </div>
-                      <PencilIcon class="click-icon" @click="editAlarm()"/>
+                      <PencilIcon class="click-icon" @click="editAlarm(alarm.id)"/>
                     </div>
                     <div class="toggle">
-                      <TrashCanIcon class="click-icon-2" @click="deleteAlarm()"/>
+                      <TrashCanIcon class="click-icon-2" @click="deleteAlarm(alarm.id)"/>
                       <ToggleButton
-                          :activeAlarm = "() => activeAlarm(alarm.id)"/>
+                          :activeAlarm = "() => activeAlarm(alarm.id)"
+                          @click="checkActive(alarm.id)"
+                      />
                     </div>
                 </div>
                 <div class="item-days">
@@ -42,20 +44,20 @@
                     </div>
                 </div>
                 <div class="counter">
-                    2 hours and 3 minutes left
+
                 </div>
             </div>
 
           <PopUpDeleteAlarm v-if="deleteAsk"
-                            :confirmDelete="() => confirmDelete(id)"
+                            :confirmDelete="() => confirmDelete(idDelete)"
                             :cancelDelete="() => cancelDelete()">
-            Are you sure you want to delete {{ alarm.name }}?
+            Are you sure you want to delete {{ alarms.find(a => a.id === idDelete).name }}?
           </PopUpDeleteAlarm>
 
           <PopUpEditAlarm v-if="clickEdit"
-                          :confirmEdit="() => confirmEdit(id)"
+                          :confirmEdit="() => confirmEdit(idEdit)"
                           :cancelEdit="() => cancelEdit()"
-                          :alarm="alarm"/>
+                          :alarm="alarms.find(a => a.id === idEdit)"/>
 
         </div>
     </div>
@@ -63,15 +65,42 @@
 
 <script>
 export default {
-    props: { alarms: [] },
+    props: { alarms: [], snoozedAlarms: null, ringingAlarms: null },
     data() {
         return {
             itemDays: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
             deleteAsk: false,
             clickEdit: false,
+            idDelete: null,
+            idEdit: null,
+            daysLeft: null,
+            hoursLeft: null,
+            minutesLeft: null,
+            secondsLeft: null
         }
     },
     methods: {
+        checkActive(id) {
+          let _indexRings = this.ringingAlarms.findIndex(obj => obj.id === id);
+          let _indexSnooze = this.snoozedAlarms.findIndex(obj => obj.id === id);
+          let _alarm = this.alarms.find(a => a.id === id);
+
+          if(_alarm.isActive == false)
+          {
+            if(_indexRings)
+            {
+              this.ringingAlarms.splice(_indexRings, 1);
+            }
+            if(_indexSnooze)
+            {
+              this.snoozedAlarms.splice(_indexSnooze, 1);
+            }
+
+            _alarm.isSnoozed = false;
+            _alarm.isRinging = false;
+            _alarm.hasStopped = false;
+          }
+        },
         changeDayItem(day, id) {
           let _alarm = this.alarms.find(a => a.id === id);
 
@@ -86,8 +115,9 @@ export default {
           console.log(_alarm);
           console.log(_alarm.id);
         },
-        deleteAlarm() {
+        deleteAlarm(id) {
           this.deleteAsk = true;
+          this.idDelete = id;
         },
         confirmDelete(id) {
           let _index = this.alarms.findIndex(obj => obj.id === id);
@@ -98,8 +128,9 @@ export default {
         cancelDelete() {
           this.deleteAsk = false;
         },
-        editAlarm() {
+        editAlarm(id) {
           this.clickEdit = true;
+          this.idEdit = id;
         },
         confirmEdit(id) {
           this.clickEdit = false;
@@ -107,15 +138,51 @@ export default {
         cancelEdit() {
           this.clickEdit = false;
         },
-        updateTimeLeft() {
+        updateTimeLeft(id) {
           const today = new Date();
+          let _alarm = this.alarms.find(a => a.id === id);
+          let _endDay = 100;
 
-          const endDate = new Date(today.getDay());
-          const days = parseInt((endDate - today) / (1000 * 60 * 60 * 24));
-          const hours = parseInt(Math.abs(endDate - today) / (1000 * 60 * 60) % 24);
-          const minutes = parseInt(Math.abs(endDate.getTime() - today.getTime()) / (1000 * 60) % 60);
-          const seconds = parseInt(Math.abs(endDate.getTime() - today.getTime()) / (1000) % 60);
-        }
+          for(let i = 0; i < 7; i ++){
+            if(_alarm.days[i]) {
+              let temp = (i+1) - today.getDay();
+              if(temp < 0) temp = 7 + temp;
+              if (_endDay > temp) _endDay = temp;
+            }
+          }
+
+          const _date = new Date();
+          _date.setDate(_date.getDate() + _endDay);
+
+          let delta = 0;
+
+          console.log(Date.parse(Math.abs(new Date(_date) - new Date())));
+
+
+          this.daysLeft = Math.trunc(delta / 86400);
+          delta -= this.daysLeft * 86400;
+
+          console.log(this.daysLeft * 86400);
+
+
+          this.hoursLeft = Math.floor(delta / 3600) % 24;
+          delta -= this.hoursLeft * 3600;
+
+          this.minutesLeft = Math.floor(delta / 60) % 60;
+          delta -= this.minutesLeft * 60;
+
+          this.secondsLeft = delta % 60;
+
+
+          this.daysLeft = (this.daysLeft == 0) ? null : (this.daysLeft == 1) ? this.daysLeft + ' day' : this.daysLeft + ' days';
+          this.hoursLeft = (this.hoursLeft == 0) ? null : (this.hoursLeft == 1) ? this.hoursLeft + ' hour' : this.hoursLeft + ' hours';
+          this.minutesLeft = (this.minutesLeft == 0) ? null : (this.minutesLeft == 1) ? this.minutesLeft + ' minute' : this.minutesLeft + ' minutes';
+          this.secondsLeft = (this.secondsLeft == 0) ? null : (this.secondsLeft == 1) ? this.secondsLeft + ' second' : this.secondsLeft + ' seconds';
+
+         }
+    },
+    mounted() {
+      // setInterval(() => this.updateTimeLeft(1), 1000);
     }
 }
 </script>
