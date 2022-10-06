@@ -22,7 +22,8 @@ export default {
   data () {
     return {
       ringtone: null,
-      currMinutes: null
+      currMinutes: null,
+      ringtoneList: ['../src/assets/audio/default_1.mp3', '../src/assets/audio/default_2.wav'],
     }
   },
   methods: {
@@ -47,7 +48,7 @@ export default {
 
     this.currMinutes = today.getMinutes();
 
-    this.ringtone = new Audio('../src/assets/audio/default_1.mp3');
+    this.ringtone = new Audio(this.ringtoneList[this.alarm.ringtone]);
     if (typeof this.ringtone.loop == 'boolean')
     {
       this.ringtone.loop = true;

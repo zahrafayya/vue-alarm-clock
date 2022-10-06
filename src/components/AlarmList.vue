@@ -57,7 +57,14 @@
                     <div class="add-label">Ringtone: </div>
                     <div class="select-ringtone">
                         <RingtoneIcon/>
-                        <input class="upload-song" type="file" ref="file" v-on:change="handleFileUpload()"/>
+
+                        <input type="radio" id="one" value="0" class="upload-song" v-model="pickedRingtone" />
+                        <label for="one">Default 1</label>
+
+                        <RingtoneIcon class="upload-song"/>
+
+                        <input type="radio" id="two" value="1" class="upload-song" v-model="pickedRingtone" />
+                        <label for="two">Default 2</label>
                     </div>
                 </div>
                 <div class="days">
@@ -107,7 +114,8 @@
 export default {
     data() {
         return {
-            file: null,
+            pickedRingtone: 0,
+            ringtoneList: ['../src/assets/audio/default_1.mp3', '../src/assets/audio/default_2.wav'],
             defaultSnoozeMinute: 1,
             defaultRingingTime: 1,
             hour_1: 0,
@@ -351,19 +359,6 @@ export default {
         let _hour = this.hour_1 * 10 + this.hour_2;
         let _minute = this.minute_1 * 10 + this.minute_2;
 
-        let formData = new FormData();
-        formData.append('file', this.file);
-
-        axios.post( '/upload',
-            formData,
-            {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'multipart/form-data'
-              }
-            }
-        )
-
         if (this.selectDay.includes(true))
         {
           this.alarms.push({
@@ -375,7 +370,7 @@ export default {
             isSnoozed: false,
             isRinging: false,
             hasStopped: false,
-            ringtone: null,
+            ringtone: this.pickedRingtone,
             daysLeft: 0,
             hourLeft: 0,
             minuteLeft: 0,

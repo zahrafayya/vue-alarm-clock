@@ -48,10 +48,25 @@
             <div class="add-label">Alarm Name: </div>
             <input class="alarm-name-input" v-model="alarmName"/>
           </div>
-          <div class="edit-section">
+          <div class="alarm-ring">
             <div class="add-label">Ringtone: </div>
-            <div class="select-ringtone">
-              <div class="ringtone-label">Alarm ringtone</div>
+            <div class="select-ringtone-2">
+
+
+              <div>
+                <RingtoneIcon/>
+                <input type="radio" id="one" value="0" class="upload-song" v-model="pickedRingtone" />
+                <label for="one">Default 1</label>
+
+              </div>
+
+              <div>
+                <RingtoneIcon/>
+
+                <input type="radio" id="two" value="1" class="upload-song" v-model="pickedRingtone" />
+                <label for="two">Default 2</label>
+              </div>
+
             </div>
           </div>
         </div>
@@ -93,6 +108,7 @@ export default {
   props: {confirmEdit: null, cancelEdit: null, alarm: null },
   data() {
     return {
+      pickedRingtone: this.alarm.ringtone,
       days: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
       dayTemp: [],
       alarmName: this.alarm.name,
@@ -117,6 +133,7 @@ export default {
       }
       this.alarm.ringingTime = this.ringDuration;
       this.alarm.snoozeMinute = this.snoozeWait;
+      this.alarm.ringtone = this.pickedRingtone;
     },
     upHour() {
       if (this.hour_2 == 9)
@@ -176,6 +193,10 @@ export default {
 </script>
 
 <style>
+.select-ringtone-2 {
+  display: flex;
+  flex-direction: column;
+}
 .flex {
   display: flex;
   margin-bottom: 24px;
