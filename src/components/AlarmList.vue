@@ -1,6 +1,7 @@
 <script setup>
     import AlarmItem from './AlarmItem.vue'
     import RingtoneIcon from './icons/RingtoneIcon.vue';
+    import AlarmPopup from "./AlarmPopup.vue";
 </script>
 
 <template>
@@ -69,16 +70,16 @@
         <button class="add" @click="addAlarm">
             Add
         </button>
-        <AlarmItem :alarms="alarms"/>
-        <AlarmItem/>
-        <div v-for="alarm in alarms">
-            <p>aaaaaaaa</p>
-            <p>aaaaaaaa</p>
-            <p>aaaaaaaa</p>
-            <div v-if="alarm.id">
-                {{ alarm.hour }}
-            </div>
+        <div class="alarm-item">
+            <AlarmItem :alarms="alarms"/>
         </div>
+        <AlarmPopup
+            v-if="isRinging"
+            :stopAlarm = "() => stopAlarm(currentRingingAlarm)"
+            :snoozeAlarm = "() => snoozeAlarm(currentRingingAlarm)"
+        >
+            <p>{{ ringingAlarmName }} is ringing!</p>
+        </AlarmPopup>
     </div>
 </template>
 
@@ -86,125 +87,247 @@
 export default {
     data() {
         return {
+            snoozeMinute: 1,
+            ringingTime: 2,
             hour_1: 0,
             hour_2: 0,
             minute_1: 0,
             minute_2: 0,
             isRinging: false,
+            ringingAlarms: [], // id, endHour, endMinute
+            snoozedAlarms: [], // id, pressSnoozeCount
+            currentRingingAlarm: null,
+            ringingAlarmName: null,
 
             days: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
 
-            alarms: [{ 
-                id: 0, 
+            alarms: [{
+                id: 0,
                 name: null,
-                hour: 0, 
-                minute: 0, 
-                days: [false, false, false, false, false, false, false], 
-                ringtone: null, 
-                isSnooze: false, 
-                isStopped: false,
-                daysLeft: 0, 
-                hourLeft: 0, 
+                hour: 0,
+                minute: 0,
+                days: [false, false, false, false, false, false, false],
+                isSnoozed: false,
+                isRinging: false,
+                hasStopped: false,
+                ringtone: null,
+                daysLeft: 0,
+                hourLeft: 0,
                 minuteLeft: 0,
             }],
 
+            alarmAtHour: {
+              _0: [], _1: [], _2: [], _3: [], _4: [], _5: [], _6: [], _7: [], _8: [],
+              _9: [], _10: [], _11: [], _12: [], _13: [], _14: [], _15: [], _16: [],
+              _17: [], _18: [], _19: [], _20: [], _21: [], _22: [], _23: []
+
+            },
+
             selectDay: [false, false, false, false, false, false, false],
-            alarmName: null
+            alarmName: null,
+
+
         };
     },
     methods: {
-        changeDayToggle(day) {
-            this.selectDay[day] = !this.selectDay[day];
-        },
-        upHour() {
-            if (this.hour_2 == 9)
-                this.hour_1++;
-            this.hour_2 = (this.hour_2 == 9) ? 0 : this.hour_2 + 1;
-            if (this.hour_1 == 3)
-                this.hour_1 = 0;
-            if (this.hour_1 == 2 && this.hour_2 == 4) {
-                this.hour_1 = 0;
-                this.hour_2 = 0;
-            }
-        },
-        downHour() {
-            if (this.hour_1 == 0 && this.hour_2 == 0) {
-                this.hour_1 = 2;
-                this.hour_2 = 3;
-            }
-            else {
-                if (this.hour_2 == 0) {
-                    this.hour_2 = 9;
-                    this.hour_1--;
-                }
-                else
-                    this.hour_2--;
-            }
-        },
-        upMinute() {
-            if (this.minute_2 == 9) {
-                this.minute_2 = 0;
-                this.minute_1++;
-            }
-            else
-                this.minute_2++;
-            if (this.minute_1 == 6) {
-                this.minute_1 = 0;
-                this.upHour();
-            }
-        },
-        downMinute() {
-            if (this.minute_1 == 0 && this.minute_2 == 0) {
-                this.downHour();
-                this.minute_1 = 5;
-                this.minute_2 = 9;
-            }
-            else {
-                if (this.minute_2 == 0) {
-                    this.minute_2 = 9;
-                    this.minute_1--;
-                }
-                else
-                    this.minute_2--;
-            }
-        },
-        checkTime() {
-            const today = new Date();
-            let _hour = today.getHours();
-            let _minute = today.getMinutes();
-            if (_hour == (this.hour_1 * 10) + this.hour_2 &&
-                _minute == (this.minute_1 * 10) + this.minute_2) {
-                if (!this.ring) {
-                    alert("Alarm is ringing!");
-                    this.ring = true;
-                }
-            }
-            else
-                this.ring = false;
-        },
-        addAlarm() {
-            let _hour = this.hour_1 * 10 + this.hour_2;
-            let _minute = this.minute_1 * 10 + this.minute_2;
-            this.alarms.push({ 
-                id: this.alarms[this.alarms.length - 1].id + 1, 
-                name: this.alarmName,
-                hour: _hour, 
-                minute: _minute,
-                days: this.selectDay,
-
-                ringtone: null, 
-                isSnooze: false, 
-                isStopped: false,
-                daysLeft: 0, 
-                hourLeft: 0, 
-                minuteLeft: 0,
-            });
-            console.log(this.alarms);
+      changeDayToggle(day) {
+        this.selectDay[day] = !this.selectDay[day];
+      },
+      upHour() {
+        if (this.hour_2 == 9)
+          this.hour_1++;
+        this.hour_2 = (this.hour_2 == 9) ? 0 : this.hour_2 + 1;
+        if (this.hour_1 == 3)
+          this.hour_1 = 0;
+        if (this.hour_1 == 2 && this.hour_2 == 4) {
+          this.hour_1 = 0;
+          this.hour_2 = 0;
         }
+      },
+      downHour() {
+        if (this.hour_1 == 0 && this.hour_2 == 0) {
+          this.hour_1 = 2;
+          this.hour_2 = 3;
+        } else {
+          if (this.hour_2 == 0) {
+            this.hour_2 = 9;
+            this.hour_1--;
+          } else
+            this.hour_2--;
+        }
+      },
+      upMinute() {
+        if (this.minute_2 == 9) {
+          this.minute_2 = 0;
+          this.minute_1++;
+        } else
+          this.minute_2++;
+        if (this.minute_1 == 6) {
+          this.minute_1 = 0;
+          this.upHour();
+        }
+      },
+      downMinute() {
+        if (this.minute_1 == 0 && this.minute_2 == 0) {
+          this.downHour();
+          this.minute_1 = 5;
+          this.minute_2 = 9;
+        } else {
+          if (this.minute_2 == 0) {
+            this.minute_2 = 9;
+            this.minute_1--;
+          } else
+            this.minute_2--;
+        }
+      },
+      checkTime() {
+        const today = new Date();
+        let _hour = today.getHours();
+        let _minute = today.getMinutes();
+        let _day = today.getDay();
+
+        for (let i = 0; i < this.alarmAtHour['_' + _hour].length; i++) {
+          let _id = this.alarmAtHour['_' + _hour][i];
+          let _alarm = this.alarms.find(a => a.id === _id);
+
+          if (_alarm.days[_day - 1]) {
+            if (_alarm.minute == _minute && !_alarm.hasStopped) {
+              let _endMinute = ((_alarm.minute + this.ringingTime) % 60);
+              let _endHour = ((_alarm.minute + this.ringingTime) >= 60) ?
+                  ((_alarm.hour + 1) % 24) : _alarm.hour;
+
+              _alarm.isRinging = true;
+
+              this.addRingingAlarm(_alarm.id, _endHour, _endMinute);
+            }
+          }
+        }
+      },
+      checkSnooze() {
+        const today = new Date();
+        let _hour = today.getHours();
+        let _minute = today.getMinutes();
+
+        for (let j = 0; j < this.snoozedAlarms.length; j++) {
+          let _alarm = this.alarms.find(a => a.id === this.snoozedAlarms[j].id);
+
+          let _minuteSnooze = ((_alarm.minute + (this.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) % 60);
+          let _hourSnooze = ((_alarm.minute + (this.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) >= 60) ?
+              ((_alarm.hour + 1) % 24) : _alarm.hour;
+
+          console.log(_hour == _hourSnooze && _minute == _minuteSnooze);
+          console.log(_hourSnooze);
+          console.log(_minuteSnooze);
+          console.log(this.snoozedAlarms[j].pressSnoozeCount);
+
+          if (_hour == _hourSnooze && _minute == _minuteSnooze) {
+            console.log("MASUK");
+            let _endMinute = ((_minuteSnooze + this.ringingTime) % 60);
+            let _endHour = ((_hourSnooze + this.ringingTime) >= 60) ?
+                ((_alarm.hour + 1) % 24) : _alarm.hour;
+
+            _alarm.isRinging = true;
+
+            this.addRingingAlarm(_alarm.id, _endHour, _endMinute);
+
+            console.log("TESTING");
+          }
+        }
+      },
+      addRingingAlarm(id, stop_hour, stop_minute) {
+        this.ringingAlarms.push({
+          id: id,
+          endHour: stop_hour,
+          endMinute: stop_minute
+        });
+      },
+      playAlarm() {
+        for (let j = 0; j < this.ringingAlarms.length; j++) {
+          const today = new Date();
+          let _hour = today.getHours();
+          let _minute = today.getMinutes();
+
+          let _alarm = this.alarms.find(a => a.id === this.ringingAlarms[j].id);
+
+          if ((_hour > this.ringingAlarms.endHour) ||
+              (_hour === this.ringingAlarms.endHour && _minute >= this.ringingAlarms.endMinute)) {
+            this.stopAlarm(_alarm.id);
+
+            // rollback
+            _alarm.hasStopped = false;
+            this.ringingAlarms.splice(j, 1);
+          }
+
+          if (_alarm.isRinging) this.startAlarm(_alarm.id);
+        }
+
+      },
+      startAlarm(id) {
+        let _alarm = this.alarms.find(a => a.id === id);
+
+        this.isRinging = true;
+        this.currentRingingAlarm = id;
+        this.ringingAlarmName = _alarm.name;
+      },
+      stopAlarm(id) {
+        let _alarm = this.alarms.find(a => a.id === id);
+
+        this.isRinging = false;
+        this.currentRingingAlarm = null;
+        this.ringingAlarmName = null;
+
+        _alarm.isRinging = false;
+        _alarm.hasStopped = true;
+      },
+      snoozeAlarm(id) {
+        let _alarm = this.alarms.find(a => a.id === id);
+        let _snoozedAlarm = this.snoozedAlarms.find(a => a.id === id);
+
+        if (_snoozedAlarm) {
+          if (_snoozedAlarm.pressSnoozeCount == 3) {
+            _alarm.isSnoozed = false;
+            let _index = this.snoozedAlarms.findIndex(obj => obj.id === id);
+            this.snoozedAlarms.splice(_index, 1);
+
+            // kasih popup tulisan kalau alarm udah ga bisa disnooze lagi
+            this.stopAlarm(id);
+          } else _snoozedAlarm.pressSnoozeCount++;
+        } else {
+          _alarm.isSnoozed = true;
+          this.snoozedAlarms.push({
+            id: id,
+            pressSnoozeCount: 1
+          });
+        }
+
+        this.stopAlarm(id);
+
+      },
+      addAlarm() {
+        let _hour = this.hour_1 * 10 + this.hour_2;
+        let _minute = this.minute_1 * 10 + this.minute_2;
+        this.alarms.push({
+          id: this.alarms[this.alarms.length - 1].id + 1,
+          name: (this.alarmName) ? this.alarmName : "My Alarm " + (this.alarms[this.alarms.length - 1].id + 1),
+          hour: _hour,
+          minute: _minute,
+          days: this.selectDay,
+          isSnoozed: false,
+          isRinging: false,
+          hasStopped: false,
+          ringtone: null,
+          daysLeft: 0,
+          hourLeft: 0,
+          minuteLeft: 0,
+        });
+        this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
+      },
     },
     mounted() {
         this.alarms = JSON.parse(localStorage.getItem('alarm')) || this.alarms;
         setInterval(() => this.checkTime(), 1000);
+        setInterval(() => this.playAlarm(), 1000);
+        setInterval(() => this.checkSnooze(), 3000);
     },
     watch: {
         alarms: {
@@ -235,6 +358,9 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.alarm-item {
+    margin-bottom: 72px;
 }
 .alarm-details {
     display: flex;

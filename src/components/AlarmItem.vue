@@ -3,15 +3,15 @@
 </script>
 
 <template>
-    <div class="container">
-        <div class="item">
+    <div class="container" v-for="alarm in alarms">
+        <div class="item" v-if="alarm.id">
             <div class="time">
-                08 : 67
+                {{ (alarm.hour < 10) ? '0' + alarm.hour : alarm.hour }} : {{ (alarm.minute < 10) ? '0' + alarm.minute : alarm.minute }}
             </div>
             <div class="col">
                 <div class="alarm-title">
                     <div class="name">
-                        my alarm
+                        {{ alarm.name }}
                     </div>
                     <div class="toggle">
 
@@ -19,7 +19,8 @@
                 </div>
                 <div class="item-days">
                     <div v-for="(day, index) in itemDays">
-                        <button class="item-day">
+                        <button class="item-day" @click="changeDayItem(index, alarm.id)" 
+                        :style=" alarm.days[index] ? { 'border': '1px solid #A663E5', 'color': '#A663E5' } : null">
                             {{ day }}
                         </button>
                     </div>
@@ -44,6 +45,22 @@ export default {
     data() {
         return {
             itemDays: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
+        }
+    },
+    methods: {
+        changeDayItem(day, id) {
+          let _alarm = this.alarms.find(a => a.id === id);
+
+          _alarm.days[day] = !_alarm.days[day];
+        },
+        updateTimeLeft() {
+          const today = new Date();
+
+          const endDate = new Date(today.getDay());
+          const days = parseInt((endDate - today) / (1000 * 60 * 60 * 24));
+          const hours = parseInt(Math.abs(endDate - today) / (1000 * 60 * 60) % 24);
+          const minutes = parseInt(Math.abs(endDate.getTime() - today.getTime()) / (1000 * 60) % 60);
+          const seconds = parseInt(Math.abs(endDate.getTime() - today.getTime()) / (1000) % 60);
         }
     }
 }
@@ -99,14 +116,11 @@ export default {
     width: 36px;
     height: 36px;
     margin-right: 10px;
+    cursor: context-menu;
 
     display: flex;
     justify-content: center;
     align-items: center;
-
-    /* warna kalo keselect
-    border: 1px solid #907EEB;
-    color: #907EEB; */
 }
 
 .item-day:hover {
