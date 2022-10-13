@@ -40,7 +40,7 @@
                 <div class="ringtone">
                     <RingtoneIcon/>
                     <div class="item-label">
-                        {{ (alarm.ringtone) ? 'Default 2' : 'Default 1' }}
+                        ringtone
                     </div>
                 </div>
                 <div class="counter">

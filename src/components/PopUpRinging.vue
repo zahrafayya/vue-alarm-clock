@@ -36,7 +36,7 @@ export default {
 
       let _minutes = today.getMinutes();
 
-      if((this.alarm.minute + this.alarm.ringingTime) % 60 === _minutes && !this.alarm.isSnoozed)
+      if((this.alarm.minute + this.alarm.ringingTime) % 60 === _minutes && !this.alarm.isSnoozed && !this.alarm.hasStopped)
       {
         this.stopMusic();
         this.stopAlarm();

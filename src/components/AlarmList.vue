@@ -236,9 +236,8 @@ export default {
         let _minute = today.getMinutes();
         let _day = today.getDay();
 
-        for (let i = 0; i < this.alarmAtHour['_' + _hour].length; i++) {
-          let _id = this.alarmAtHour['_' + _hour][i];
-          let _alarm = this.alarms.find(a => a.id === _id);
+        for (let i = 0; i < this.alarms.length; i++) {
+          let _alarm = this.alarms.find(a => a.id === i);
 
           if (_alarm.days[_day - 1] && _alarm.isActive) {
             if (_alarm.minute == _minute && !_alarm.hasStopped) {
@@ -265,13 +264,12 @@ export default {
           let _hourSnooze = ((_alarm.minute + (_alarm.snoozeMinute * this.snoozedAlarms[j].pressSnoozeCount)) >= 60) ?
               ((_alarm.hour + 1) % 24) : _alarm.hour;
 
-          console.log(_hour == _hourSnooze && _minute == _minuteSnooze);
-          console.log(_hourSnooze);
-          console.log(_minuteSnooze);
-          console.log(this.snoozedAlarms[j].pressSnoozeCount);
+          // console.log(_hour == _hourSnooze && _minute == _minuteSnooze);
+          // console.log(_hourSnooze);
+          // console.log(_minuteSnooze);
+          // console.log(this.snoozedAlarms[j].pressSnoozeCount);
 
           if (_hour == _hourSnooze && _minute == _minuteSnooze) {
-            console.log("MASUK");
             let _endMinute = ((_minuteSnooze + _alarm.ringingTime) % 60);
             let _endHour = ((_hourSnooze + _alarm.ringingTime) >= 60) ?
                 ((_alarm.hour + 1) % 24) : _alarm.hour;
@@ -280,18 +278,25 @@ export default {
 
             this.addRingingAlarm(_alarm.id, _endHour, _endMinute);
 
-            console.log("TESTING");
           }
         }
       },
       addRingingAlarm(id, stop_hour, stop_minute) {
-        this.ringingAlarms.push({
-          id: id,
-          endHour: stop_hour,
-          endMinute: stop_minute
+        let _exist = this.ringingAlarms.find(element => {
+          if (element.id === id) return true;
+          return false;
         });
+
+        if(!_exist) {
+          this.ringingAlarms.push({
+            id: id,
+            endHour: stop_hour,
+            endMinute: stop_minute
+          });
+        }
       },
       playAlarm() {
+        console.log(this.ringingAlarms);
         for (let j = 0; j < this.ringingAlarms.length; j++) {
           const today = new Date();
           let _hour = today.getHours();
@@ -299,9 +304,13 @@ export default {
 
           let _alarm = this.alarms.find(a => a.id === this.ringingAlarms[j].id);
 
-          if ((_hour > this.ringingAlarms.endHour) ||
-              (_hour === this.ringingAlarms.endHour && _minute >= this.ringingAlarms.endMinute)) {
-            this.stopAlarm(_alarm.id);
+
+          if (_hour === this.ringingAlarms[j].endHour && _minute === this.ringingAlarms[j].endMinute) {
+
+            console.log('hapus');
+            console.log(_alarm);
+
+            if(!_alarm.hasStopped) this.stopAlarm(_alarm.id);
 
             // rollback
             _alarm.hasStopped = false;
@@ -328,6 +337,13 @@ export default {
 
         _alarm.isRinging = false;
         _alarm.hasStopped = true;
+
+        if(_alarm.isSnoozed)
+        {
+          _alarm.isSnoozed = false;
+          let _index = this.snoozedAlarms.findIndex(obj => obj.id === id);
+          this.snoozedAlarms.splice(_index, 1);
+        }
       },
       snoozeAlarm(id) {
         let _alarm = this.alarms.find(a => a.id === id);
@@ -352,7 +368,12 @@ export default {
           });
         }
 
-        this.stopAlarm(id);
+        this.isRinging = false;
+        this.currentRingingAlarm = null;
+        this.ringingAlarmName = null;
+
+        _alarm.isRinging = false;
+        _alarm.hasStopped = true;
 
       },
       addAlarm() {
@@ -380,7 +401,6 @@ export default {
             deleteAsk: false,
             clickEdit: false
           });
-          this.alarmAtHour['_' + _hour].push(this.alarms[this.alarms.length - 1].id);
 
           this.addAlarmSuccess = true;
         }
