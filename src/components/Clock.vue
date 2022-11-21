@@ -15,7 +15,11 @@ export default {
         return {
             hour: 0,
             minute: 0,
-            second: 0
+            second: 0,
+            day: null,
+            date: null,
+            month: null,
+            year: null,
         }
     },  
     methods: {
